@@ -1,12 +1,12 @@
 import { queryOptions, useMutation } from "@tanstack/react-query";
-import { queryClient } from "./main";
+import { NewSpell, Spell } from "./spell";
 import {
+  createSpell,
   deleteSpell,
   fetchSpell,
   fetchSpells,
   updateSpell,
 } from "./spell-service";
-import { Spell } from "./spell";
 
 export const spellsQueryOptions = queryOptions({
   queryKey: ["spells"],
@@ -20,21 +20,20 @@ export const spellQueryOptions = (spellId: string) => {
   });
 };
 
-export const useUpdateSpellMutation = () => {
+export const useCreateSpellMutation = () => {
   return useMutation({
-    mutationFn: (spell: Spell) => updateSpell(spell),
-    onSuccess: (_, spell) => {
-      queryClient.invalidateQueries({ queryKey: ["spells", spell.id] });
-    },
+    mutationFn: (newSpell: NewSpell) => createSpell(newSpell),
   });
 };
 
-export const useDeleteSpellMutation = (spellId: string) => {
+export const useUpdateSpellMutation = () => {
   return useMutation({
-    mutationKey: ["spells", "delete"],
-    mutationFn: () => deleteSpell(spellId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["spells", spellId] });
-    },
+    mutationFn: (spell: Spell) => updateSpell(spell),
+  });
+};
+
+export const useDeleteSpellMutation = () => {
+  return useMutation({
+    mutationFn: (spellId: string) => deleteSpell(spellId),
   });
 };

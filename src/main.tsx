@@ -2,13 +2,24 @@ import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
-import { MutationCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  MutationCache,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { ConfirmProvider } from "material-ui-confirm";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
+import { SnackBar } from "./components/Snackbar";
+import { NotificationProvider } from "./contexts/NotificationProvider";
 import { routeTree } from "./routeTree.gen";
 
-export const mutationCache = new MutationCache()
+export const mutationCache = new MutationCache({
+  onSuccess: () => {
+    queryClient.invalidateQueries();
+  },
+});
 export const queryClient = new QueryClient({ mutationCache: mutationCache });
 
 const router = createRouter({
@@ -37,7 +48,12 @@ if (!rootElement.innerHTML) {
   root.render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <ConfirmProvider>
+          <NotificationProvider>
+            <RouterProvider router={router} />
+            <SnackBar />
+          </NotificationProvider>
+        </ConfirmProvider>
       </QueryClientProvider>
     </StrictMode>
   );

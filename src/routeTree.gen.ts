@@ -12,6 +12,7 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as SpellsIndexImport } from './routes/spells/index'
+import { Route as SpellsCreateImport } from './routes/spells/create'
 import { Route as SpellsSpellIdImport } from './routes/spells/$spellId'
 
 // Create/Update Routes
@@ -19,6 +20,12 @@ import { Route as SpellsSpellIdImport } from './routes/spells/$spellId'
 const SpellsIndexRoute = SpellsIndexImport.update({
   id: '/spells/',
   path: '/spells/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SpellsCreateRoute = SpellsCreateImport.update({
+  id: '/spells/create',
+  path: '/spells/create',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -39,6 +46,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SpellsSpellIdImport
       parentRoute: typeof rootRoute
     }
+    '/spells/create': {
+      id: '/spells/create'
+      path: '/spells/create'
+      fullPath: '/spells/create'
+      preLoaderRoute: typeof SpellsCreateImport
+      parentRoute: typeof rootRoute
+    }
     '/spells/': {
       id: '/spells/'
       path: '/spells'
@@ -53,36 +67,41 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/spells/$spellId': typeof SpellsSpellIdRoute
+  '/spells/create': typeof SpellsCreateRoute
   '/spells': typeof SpellsIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/spells/$spellId': typeof SpellsSpellIdRoute
+  '/spells/create': typeof SpellsCreateRoute
   '/spells': typeof SpellsIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/spells/$spellId': typeof SpellsSpellIdRoute
+  '/spells/create': typeof SpellsCreateRoute
   '/spells/': typeof SpellsIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/spells/$spellId' | '/spells'
+  fullPaths: '/spells/$spellId' | '/spells/create' | '/spells'
   fileRoutesByTo: FileRoutesByTo
-  to: '/spells/$spellId' | '/spells'
-  id: '__root__' | '/spells/$spellId' | '/spells/'
+  to: '/spells/$spellId' | '/spells/create' | '/spells'
+  id: '__root__' | '/spells/$spellId' | '/spells/create' | '/spells/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   SpellsSpellIdRoute: typeof SpellsSpellIdRoute
+  SpellsCreateRoute: typeof SpellsCreateRoute
   SpellsIndexRoute: typeof SpellsIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   SpellsSpellIdRoute: SpellsSpellIdRoute,
+  SpellsCreateRoute: SpellsCreateRoute,
   SpellsIndexRoute: SpellsIndexRoute,
 }
 
@@ -97,11 +116,15 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/spells/$spellId",
+        "/spells/create",
         "/spells/"
       ]
     },
     "/spells/$spellId": {
       "filePath": "spells/$spellId.tsx"
+    },
+    "/spells/create": {
+      "filePath": "spells/create.tsx"
     },
     "/spells/": {
       "filePath": "spells/index.tsx"

@@ -1,4 +1,8 @@
-import { SxProps, Theme } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import { Breadcrumbs, Stack, SxProps, Theme, Typography } from "@mui/material";
+import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -8,12 +12,18 @@ import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { useConfirm } from "material-ui-confirm";
 import { useMemo, useState } from "react";
-import { Spell } from "../../spell";
-import { spellsQueryOptions } from "../../spell-queries";
-import { SnackBar } from "../../components/snackbar";
 import { CustomLink } from "../../components/CustomLink";
+import { Spell } from "../../spell";
+import { Route as createSpellRoute } from "./create.tsx";
+
+import {
+  spellsQueryOptions,
+  useDeleteSpellMutation,
+} from "../../spell-queries";
+import { CustomButtonLink } from "../../components/CustomButtonLink.tsx";
 
 export const Route = createFileRoute("/spells/")({
   loader: ({ context: { queryClient } }) =>
@@ -25,7 +35,36 @@ function Index() {
   const spellsQuery = useSuspenseQuery(spellsQueryOptions);
   const spells = spellsQuery.data;
 
-  return <SpellTable sx={{ mb: 5 }} rows={spells}></SpellTable>;
+  return (
+    <Stack>
+      <Breadcrumbs
+        aria-label="breadcrumb"
+        separator={<NavigateNextIcon fontSize="small" />}
+      >
+        <CustomLink
+          from={Route.path}
+          to={Route.to}
+          underline="hover"
+          color="inherit"
+        >
+          Spells
+        </CustomLink>
+      </Breadcrumbs>
+      <Typography variant="h4">Spells</Typography>
+      <Stack direction="row-reverse" mb={2}>
+        <CustomButtonLink
+          from={Route.path}
+          to={createSpellRoute.to}
+          type="button"
+          variant="contained"
+          startIcon={<AddIcon />}
+        >
+          Create new
+        </CustomButtonLink>
+      </Stack>
+      <SpellTable sx={{ mb: 5 }} rows={spells}></SpellTable>
+    </Stack>
+  );
 }
 
 interface SpellTableProps {
@@ -96,14 +135,44 @@ export function SpellTable({ rows, sx }: SpellTableProps) {
   );
 }
 
+function SpellTableHead() {
+  return (
+    <TableHead>
+      <TableRow>
+        <TableCell key="name" align="left" padding="normal">
+          Name
+        </TableCell>
+        <TableCell key="actions" padding="normal" />
+      </TableRow>
+    </TableHead>
+  );
+}
+
 interface SpellTableRowProps {
   spell: Spell;
 }
 
 function SpellTableRow({ spell }: SpellTableRowProps) {
+  const confirm = useConfirm();
+  const deleteSpellMutation = useDeleteSpellMutation();
+
+  const handleDelete = async () => {
+    const { confirmed } = await confirm({
+      title: "Delete spell?",
+      description: `Are you sure you wish to delete the "${spell.name}" spell?`,
+      confirmationText: "Delete",
+      cancellationText: "Cancel",
+      cancellationButtonProps: { color: "error" },
+    });
+
+    if (confirmed) {
+      deleteSpellMutation.mutate(spell.id);
+    }
+  };
+
   return (
     <TableRow tabIndex={-1}>
-      <TableCell component="th" scope="row">
+      <TableCell component="th" scope="col">
         <CustomLink
           to="/spells/$spellId"
           params={{
@@ -113,18 +182,13 @@ function SpellTableRow({ spell }: SpellTableRowProps) {
           {spell.name}
         </CustomLink>
       </TableCell>
+      <TableCell component="th" scope="col">
+        <Stack direction="row" justifyContent="flex-end">
+          <IconButton aria-label="delete" onClick={handleDelete}>
+            <DeleteIcon />
+          </IconButton>
+        </Stack>
+      </TableCell>
     </TableRow>
-  );
-}
-
-function SpellTableHead() {
-  return (
-    <TableHead>
-      <TableRow>
-        <TableCell key="name" align="left" padding="normal">
-          Name
-        </TableCell>
-      </TableRow>
-    </TableHead>
   );
 }

@@ -1,17 +1,10 @@
-import {
-  Alert,
-  Breadcrumbs,
-  Collapse,
-  IconButton,
-  Snackbar,
-  SnackbarCloseReason,
-  Typography,
-} from "@mui/material";
+import Breadcrumbs from "@mui/material/Breadcrumbs";
+import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   spellQueryOptions,
   useUpdateSpellMutation,
@@ -20,7 +13,7 @@ import { useState } from "react";
 import { CustomLink } from "../../components/CustomLink.tsx";
 import { Route as spellsRoute } from "./index.tsx";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import CloseIcon from "@mui/icons-material/Close";
+import { useNotificationContext } from "../../hooks/useNotificationContext.ts";
 
 export const Route = createFileRoute("/spells/$spellId")({
   loader: ({ context: { queryClient }, params: { spellId } }) => {
@@ -34,7 +27,8 @@ function RouteComponent() {
   const { data: spell } = useSuspenseQuery(spellQueryOptions(spellId));
   const [name, setName] = useState(spell.name);
   const updateSpell = useUpdateSpellMutation();
-  const [snackBarOpen, setSnackBarOpen] = useState(false);
+  const navigate = useNavigate({ from: Route.fullPath });
+  const { showNotification } = useNotificationContext();
 
   return (
     <Stack mx={2}>
@@ -43,7 +37,6 @@ function RouteComponent() {
         separator={<NavigateNextIcon fontSize="small" />}
       >
         <CustomLink
-          from={Route.fullPath}
           to={spellsRoute.to}
           underline="hover"
           color="inherit"
@@ -59,7 +52,12 @@ function RouteComponent() {
             event.preventDefault();
             updateSpell.mutate(
               { id: spellId, name },
-              { onSuccess: () => setSnackBarOpen(true) }
+              {
+                onSuccess: () => {
+                  navigate({ to: spellsRoute.to });
+                  showNotification(`"${name}" updated successfully`, "success");
+                },
+              }
             );
           }}
         >
@@ -78,45 +76,6 @@ function RouteComponent() {
           </Stack>
         </form>
       </Stack>
-      <SnackBar
-        open={snackBarOpen}
-        setOpen={setSnackBarOpen}
-        message={` The ${name} spell has been succesfully updated`}
-      />
     </Stack>
-  );
-}
-
-function SnackBar({
-  open,
-  setOpen,
-  message,
-}: {
-  open: boolean;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  message: string;
-}) {
-  const handleClose = (
-    event?: React.SyntheticEvent | Event,
-    reason?: SnackbarCloseReason
-  ) => {
-    if (reason === "clickaway") {
-      return;
-    }
-
-    setOpen(false);
-  };
-
-  return (
-    <Snackbar
-      anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      open={open}
-      autoHideDuration={4000}
-      onClose={handleClose}
-    >
-      <Alert onClose={handleClose} severity="success" sx={{ width: "100%" }}>
-        {message}
-      </Alert>
-    </Snackbar>
   );
 }
